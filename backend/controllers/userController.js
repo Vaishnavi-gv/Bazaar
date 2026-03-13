@@ -1,9 +1,8 @@
 import { User } from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import verifyEmail from "../emailVerify/verifyEmail.js";
 
-// Register new user and send verification email
+// Register new user
 export const register = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
@@ -32,67 +31,18 @@ export const register = async (req, res) => {
       password: hashPassword,
     });
 
-    const emailVerificationToken = jwt.sign(
-      { id: newUser._id },
-      process.env.SECRET_KEY,
-      { expiresIn: "10m" }
-    );
-
-    verifyEmail(emailVerificationToken, email);
-    newUser.token = emailVerificationToken;
-    await newUser.save();
-
     const userResponse = newUser.toObject();
     delete userResponse.password;
 
     return res.status(201).json({
       success: true,
-      message: "User registered successfully. Please verify your email.",
+      message: "User registered successfully. You can now log in.",
       user: userResponse,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
       message: error.message,
-    });
-  }
-};
-
-// Verify user email using token sent via email
-export const verifyUserEmail = async (req, res) => {
-  try {
-    const { token } = req.params;
-
-    if (!token) {
-      return res.status(400).json({
-        success: false,
-        message: "Verification token is required",
-      });
-    }
-
-    const decoded = jwt.verify(token, process.env.SECRET_KEY);
-
-    const user = await User.findById(decoded.id);
-
-    if (!user || user.token !== token) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid or expired verification token",
-      });
-    }
-
-    user.isVerified = true;
-    user.token = null;
-    await user.save();
-
-    return res.status(200).json({
-      success: true,
-      message: "Email verified successfully",
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid or expired verification token",
     });
   }
 };
@@ -115,13 +65,6 @@ export const login = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Invalid credentials",
-      });
-    }
-
-    if (!user.isVerified) {
-      return res.status(403).json({
-        success: false,
-        message: "Please verify your email before logging in",
       });
     }
 

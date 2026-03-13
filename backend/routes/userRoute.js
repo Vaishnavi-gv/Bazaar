@@ -1,7 +1,6 @@
 import express from "express";
 import {
   register,
-  verifyUserEmail,
   login,
   logout,
   getProfile,
@@ -16,7 +15,6 @@ const router = express.Router();
 
 // Public routes
 router.post("/register", register);
-router.get("/verify-email/:token", verifyUserEmail);
 router.post("/login", login);
 
 // Authenticated user routes

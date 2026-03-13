@@ -4,28 +4,46 @@ import cors from "cors";
 import helmet from "helmet";
 import connectDB from "./database/db.js";
 import userRoute from "./routes/userRoute.js";
+import productRoute from "./routes/productRoute.js";
 
 const app = express();
 
 const PORT = process.env.PORT || 3000;
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";
 
-// Security headers (helps mitigate XSS and other attacks)
-app.use(helmet());
+// Allow both localhost and 127.0.0.1 (browsers treat them as different origins)
+const ALLOWED_ORIGINS = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  process.env.CLIENT_ORIGIN,
+].filter(Boolean);
+
+// Security headers – crossOriginResourcePolicy allows API responses to be loaded cross-origin
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 
 // JSON body parsing
 app.use(express.json());
 
-// Strict CORS configuration to only allow known frontend origin
+// CORS – allow frontend origins
 app.use(
   cors({
-    origin: CLIENT_ORIGIN,
+    origin: (origin, cb) => {
+      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+        cb(null, true);
+      } else {
+        cb(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
 
 // API routes
 app.use("/api/v1/user", userRoute);
+app.use("/api/v1/products", productRoute);
 
 app.listen(PORT, () => {
   connectDB();
