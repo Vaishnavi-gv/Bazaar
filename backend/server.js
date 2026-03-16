@@ -5,6 +5,7 @@ import helmet from "helmet";
 import connectDB from "./database/db.js";
 import userRoute from "./routes/userRoute.js";
 import productRoute from "./routes/productRoute.js";
+import paymentRoute from "./routes/paymentRoute.js";
 
 const app = express();
 
@@ -44,6 +45,7 @@ app.use(
 // API routes
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/products", productRoute);
+app.use("/api/v1/payments", paymentRoute);
 
 app.listen(PORT, () => {
   connectDB();
